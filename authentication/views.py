@@ -3,8 +3,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import SignUpSerializer, SignInSerializer
+from .serializers import SignUpSerializer, SignInSerializer, UserSerializer
 from django.contrib.auth import get_user_model
+from rest_framework.permissions import IsAuthenticated
 
 class SignUpAPIView(APIView):
     def post(self, request):
@@ -52,4 +53,14 @@ class SignInAPIView(APIView):
             return Response({"detail": "Identifiants invalides"}, status=status.HTTP_400_BAD_REQUEST)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class UserDetailView(APIView):
+    permission_classes = [IsAuthenticated]  # Assure que seul l'utilisateur connecté peut accéder à cette vue
+
+    def get(self, request):
+        user = request.user  # Récupère l'utilisateur connecté
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
 
