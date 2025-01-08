@@ -5,11 +5,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
 from rest_framework.views import APIView
 
-class UserSerializer(serializers.ModelSerializer):
-    phone_number = serializers.CharField(source='formatted_phone', read_only=True)
-    class Meta:
-        model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'phone_number', 'commune']
 
 class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
@@ -44,3 +39,9 @@ class SignInSerializer(serializers.Serializer):
         if not user:
             raise serializers.ValidationError("Cet email n'est pas enregistré.")
         return value
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'first_name', 'last_name', 'email', 'phone', 'commune']
+        
