@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner un QR Code</title>
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <script src="{% static 'js/scanner.js' %}" defer></script>
+</head>
+<body>
+    <h1>Scanner un QR Code</h1>
+    <div id="qr-reader"></div>
+    <div id="result-container">
+        <p id="result">Aucun code scanné pour l'instant.</p>
+        <p id="score">Score total : 0</p>
+        <input type="hidden" id="correct-bin" value="">
+        <input type="hidden" id="user-id" value="{{ user_id }}">
+    </div>
+    <div id="buttons-container">
+        <button class="bin-button" data-bin="Recyclables">Recyclables</button>
+        <button class="bin-button" data-bin="Compost">Compost</button>
+        <button class="bin-button" data-bin="Verre">Verre</button>
+        <button class="bin-button" data-bin="Métal">Métal</button>
+        <button class="bin-button" data-bin="Ordures ménagères">Ordures ménagères</button>
+    </div>
+</body>
+</html>
