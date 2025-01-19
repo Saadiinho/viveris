@@ -63,4 +63,14 @@ class UserDetailView(APIView):
         user = request.user  # Récupère l'utilisateur connecté
         serializer = UserSerializer(user)
         return Response(serializer.data)
+    
+    
+from rest_framework.decorators import api_view, permission_classes
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_user_points(request):
+    """
+    Returns the current user's total points.
+    """
+    return Response({"total_points": request.user.total_points}, status=status.HTTP_200_OK)

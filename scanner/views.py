@@ -2,13 +2,132 @@ import json
 from django.shortcuts import render
 import requests
 from django.http import JsonResponse
-from .models import Product
+
+from scanner.serializers import RecyclingActivitySerializer
+from .models import Product, Bin
 import logging
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.core.exceptions import ObjectDoesNotExist
+import json
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+
+
+from .models import Product, Bin, RecyclingActivity
+from django.core.exceptions import ObjectDoesNotExist
 logger = logging.getLogger(__name__)
 
 # Remplacez par votre clé API Barcode Lookup
 BARCODE_LOOKUP_API_KEY = "m2cix88kkoh9k07wyjhgscoubwmxlm"
+
+@csrf_exempt
+@require_http_methods(["GET", "POST", "PUT", "PATCH", "DELETE"])
+def bin_managed(request, bin_id=None):
+    """
+    Vue pour gérer les poubelles (Ajout, modification, suppression, etc.)
+    """
+    if request.method == "GET":
+        if bin_id:
+            # Récupération d'une seule poubelle par ID
+            try:
+                bin = Bin.objects.get(id=bin_id)
+                return JsonResponse({
+                    "id": bin.id,
+                    "latitude": bin.latitude,
+                    "longitude": bin.longitude,
+                    "types": bin.types,
+                    "comment": bin.comment,
+                })
+            except ObjectDoesNotExist:
+                return JsonResponse({"error": "Bin not found"}, status=404)
+        else:
+            # Récupération de toutes les poubelles
+            bins = Bin.objects.all()
+            bins_data = [
+                {
+                    "id": bin.id,
+                    "latitude": bin.latitude,
+                    "longitude": bin.longitude,
+                    "types": bin.types,
+                    "comment": bin.comment,
+                }
+                for bin in bins
+            ]
+            return JsonResponse(bins_data, safe=False)
+
+    elif request.method == "POST":
+        # Création d'une nouvelle poubelle
+        try:
+            data = json.loads(request.body)
+            bin = Bin.objects.create(
+                latitude=data.get("latitude"),
+                longitude=data.get("longitude"),
+                types=data.get("types", []),
+                comment=data.get("comment", "")
+            )
+            return JsonResponse({
+                "message": "Bin created successfully",
+                "id": bin.id,
+            }, status=201)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
+    elif request.method == "PUT":
+        # Mise à jour complète d'une poubelle
+        if not bin_id:
+            return JsonResponse({"error": "Bin ID is required for update"}, status=400)
+        try:
+            data = json.loads(request.body)
+            bin = Bin.objects.get(id=bin_id)
+            bin.latitude = data.get("latitude", bin.latitude)
+            bin.longitude = data.get("longitude", bin.longitude)
+            bin.types = data.get("types", bin.types)
+            bin.comment = data.get("comment", bin.comment)
+            bin.save()
+            return JsonResponse({"message": "Bin updated successfully"})
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "Bin not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
+    elif request.method == "PATCH":
+        # Mise à jour partielle d'une poubelle
+        if not bin_id:
+            return JsonResponse({"error": "Bin ID is required for update"}, status=400)
+        try:
+            data = json.loads(request.body)
+            bin = Bin.objects.get(id=bin_id)
+            if "latitude" in data:
+                bin.latitude = data["latitude"]
+            if "longitude" in data:
+                bin.longitude = data["longitude"]
+            if "types" in data:
+                bin.types = data["types"]
+            if "comment" in data:
+                bin.comment = data["comment"]
+            bin.save()
+            return JsonResponse({"message": "Bin partially updated successfully"})
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "Bin not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
+    elif request.method == "DELETE":
+        # Suppression d'une poubelle
+        if not bin_id:
+            return JsonResponse({"error": "Bin ID is required for deletion"}, status=400)
+        try:
+            bin = Bin.objects.get(id=bin_id)
+            bin.delete()
+            return JsonResponse({"message": "Bin deleted successfully"})
+        except ObjectDoesNotExist:
+            return JsonResponse({"error": "Bin not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
 
 def map_category_to_recycling_type(category, packaging=""):
     """
@@ -191,3 +310,62 @@ def scan_barcode(request):
         })
 
     return JsonResponse({'error': 'Produit non trouvé dans aucune API'}, status=404)
+
+
+
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework import status
+import json
+
+from .models import Product, Bin, RecyclingActivity
+from django.core.exceptions import ObjectDoesNotExist
+
+@api_view(["GET", "POST"])
+@permission_classes([IsAuthenticated])  # Enforces the user must be authenticated
+def user_recycling_activity(request):
+    """
+    GET -> Return all recycling activities for the current user (request.user).
+    POST -> Create a new recycling activity and update user points.
+    """
+    if request.method == "GET":
+        activities = RecyclingActivity.objects.filter(user=request.user).order_by('-date_scanned')
+        serializer = RecyclingActivitySerializer(activities, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    elif request.method == "POST":
+        try:
+            body = request.data
+            product_name = body.get("product_name", "")
+            category = body.get("category", "")
+            quantity = int(body.get("quantity", 1))
+
+            product_type = map_category_to_recycling_type(category)  # Map category to product type
+            points_earned = 10 * quantity  # Example logic: 10 points per item
+
+            # Create the recycling activity
+            new_activity = RecyclingActivity.objects.create(
+                user=request.user,
+                product_name=product_name,
+                product_type=product_type,
+                quantity=quantity,
+                points_earned=points_earned,
+            )
+
+            # Update user's total points
+            request.user.total_points += points_earned
+            request.user.save()
+
+            return Response({
+                "message": "Activity created successfully",
+                "activity_id": new_activity.id,
+                "points_earned": new_activity.points_earned,
+                "product_type": new_activity.product_type,
+                "total_points": request.user.total_points,
+            }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+

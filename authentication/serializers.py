@@ -40,8 +40,12 @@ class SignInSerializer(serializers.Serializer):
             raise serializers.ValidationError("Cet email n'est pas enregistré.")
         return value
 
+# auth/serializers.py
+from rest_framework import serializers
+from .models import User
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'email', 'phone', 'commune']
-        
+        # Include total_points if you want to show it in user detail
+        fields = ['email', 'first_name', 'last_name', 'phone', 'commune', 'total_points']
