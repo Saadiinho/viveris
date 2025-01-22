@@ -1,6 +1,5 @@
 from django.db import models
 
-from authentication.models import User
 
 class Product(models.Model):
     barcode = models.CharField(max_length=13, unique=True)
@@ -8,10 +7,16 @@ class Product(models.Model):
     category = models.CharField(max_length=200, null=True, blank=True)
     brand = models.CharField(max_length=200, null=True, blank=True)
     image_url = models.URLField(null=True, blank=True)
-    recycling_type = models.CharField(max_length=50, null=True, blank=True)
+    recycling_type = models.CharField(max_length=50, null=True, blank=True)  # e.g., "Plastique", "Verre"
+    recycling_bin = models.CharField(max_length=50, null=True, blank=True)  # e.g., "Jaune", "Verte"
+    packaging = models.TextField(null=True, blank=True)  # Raw packaging string from OpenFoodFacts
+    packaging_materials = models.JSONField(null=True, blank=True)  # List of materials
+    labels = models.JSONField(null=True, blank=True)  # List of labels from OpenFoodFacts
+    packagings_materials_main = models.CharField(max_length=50,null=True,blank=True)
 
     def __str__(self):
         return self.name or "Produit inconnu"
+
 
 class UserScore(models.Model):
     user_id = models.CharField(max_length=255, unique=True)  # ID unique pour l'utilisateur

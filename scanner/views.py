@@ -14,15 +14,12 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
-
+from .utils import WasteClassifier , get_bin_score , get_product_type
 
 from .models import Product, Bin, RecyclingActivity
 from django.core.exceptions import ObjectDoesNotExist
 logger = logging.getLogger(__name__)
-
-# Remplacez par votre clé API Barcode Lookup
-BARCODE_LOOKUP_API_KEY = "m2cix88kkoh9k07wyjhgscoubwmxlm"
-
+classifier = WasteClassifier()
 @csrf_exempt
 @require_http_methods(["GET", "POST", "PUT", "PATCH", "DELETE"])
 def bin_managed(request, bin_id=None):
@@ -129,102 +126,44 @@ def bin_managed(request, bin_id=None):
             return JsonResponse({"error": str(e)}, status=400)
 
 
-def map_category_to_recycling_type(category, packaging=""):
-    """
-    Mappe une catégorie ou emballage à un type de déchet spécifique.
-    """
-    category = category.lower()
-    packaging = packaging.lower()
-
-    # Recyclables (emballages, papier/carton)
-    if any(keyword in category + packaging for keyword in [
-        "plastique", "carton", "papier", "emballage", "bouteille", "canette", "alu", "aluminium",
-        "plastic", "cardboard", "paper", "packaging", "bottle", "can", "aluminum",
-        "card-box", "pet-bottle", "mixed plastic-bag", "fr:sac plastique", "fr:bouteille en pet",
-        "fr:carton plastique"
-    ]):
-        return "Recyclables"
-
-    # Compost (déchets organiques)
-    elif any(keyword in category + packaging for keyword in [
-        "organique", "alimentaire", "compost", "déchet de cuisine", "fruits", "légumes", "épluchures",
-        "organic", "food waste", "compostable", "kitchen waste", "fruits", "vegetables", "peelings",
-        "fr:compost", "fr:épluchures", "fr:organique"
-    ]):
-        return "Compost"
-
-    # Verre
-    elif any(keyword in category + packaging for keyword in [
-        "verre", "bocal", "bouteille en verre", "pot",
-        "glass", "jar", "glass bottle", "container", "film", "wrapper",
-        "fr:bocal", "fr:film", "fr:verre", "fr:pot"
-    ]):
-        return "Verre"
-
-    # Métal
-    elif any(keyword in category + packaging for keyword in [
-        "metal", "can", "drink can", "canned", "steel-can", "fr:canette métal recyclabbe à l'infini",
-        "fr:cannette aluminium", "fr:boîte métal à recycler", "fr:boîte en métal"
-    ]):
-        return "Métal"
-
-    # Ordures ménagères
-    elif any(keyword in category + packaging for keyword in [
-        "ordures ménagères", "non recyclable", "déchet général", "restes",
-        "household waste", "non-recyclable", "general waste", "leftovers",
-        "fr:non recyclable", "fr:restes", "fr:ordures ménagères"
-    ]):
-        return "Ordures ménagères"
-
-    # Déchets spéciaux (piles, électronique)
-    elif any(keyword in category + packaging for keyword in [
-        "pile", "batterie", "électronique", "électroménager", "téléphone", "ordinateur", "déchet dangereux",
-        "battery", "electronics", "appliance", "phone", "computer", "hazardous waste",
-        "fr:pile", "fr:électronique", "fr:batterie", "fr:déchets dangereux"
-    ]):
-        return "Déchets spéciaux"
-
-    # Par défaut, catégorie inconnue
-    return "Autre"
-
 def fetch_from_openfoodfacts(barcode):
     """
-    Appelle l'API OpenFoodFacts pour obtenir des données sur un produit.
+    Appelle l'API OpenFoodFacts pour obtenir des données enrichies sur un produit.
     """
-    api_url = f"https://world.openfoodfacts.org/api/v0/product/{barcode}.json"
+    api_url = f"https://world.openfoodfacts.org/api/v3/product/{barcode}.json"
     response = requests.get(api_url)
 
     if response.status_code == 200:
-        data = response.json()
-        if data.get('status') == 1:  # Produit trouvé
-            product = data['product']
-            return {
-                'name': product.get('product_name', "Nom indisponible"),
-                'category': product.get('categories', "Catégorie indisponible"),
-                'brand': product.get('brands', "Marque indisponible"),
-                'image_url': product.get('image_url', ""),
-                'packaging': product.get('packaging', "")  # Utiliser pour la catégorisation
-            }
+        try:
+            data = response.json()
+            if data.get('status') == 'success':  # Produit trouvé
+                product = data['product']
+                # Extraire les données pertinentes
+                packaging_materials = product.get('packaging_materials_tags', [])
+                recycling_tags = product.get('packaging_recycling_tags', [])
+                packaging = product.get('packaging', "Non spécifié")
+                labels = product.get('labels_tags', [])
+                categories = product.get('categories', "Non spécifié")
+                packagings_materials_main = product.get('packagings_materials_main','')
+                # Retour des informations enrichies
+                return {
+                    'name': product.get('product_name', "Nom indisponible"),
+                    'category': categories,
+                    'brand': product.get('brands', "Marque indisponible"),
+                    'image_url': product.get('image_url', ""),
+                    'packaging': packaging,
+                    'packaging_materials': packaging_materials,
+                    'packagings_materials_main' : packagings_materials_main,
+                    'recycling_tags': recycling_tags,
+                    'labels': labels,
+                }
+            
+        except requests.exceptions.JSONDecodeError:
+            print("Erreur : La réponse de l'API n'est pas au format JSON valide.")
+    
+    print(f"Erreur : Impossible de récupérer les données pour le code-barres {barcode}.")
     return None
-
-def fetch_from_barcodelookup(barcode):
-    """
-    Appelle l'API Barcode Lookup pour obtenir des données sur un produit.
-    """
-    api_url = f"https://api.barcodelookup.com/v3/products?barcode={barcode}&key={BARCODE_LOOKUP_API_KEY}"
-    response = requests.get(api_url)
-
-    if response.status_code == 200:
-        data = response.json()
-        if data.get('products'):
-            product_data = data['products'][0]
-            return {
-                'name': product_data.get("product_name", "Nom indisponible"),
-                'category': product_data.get("category", "Catégorie indisponible"),
-                'brand': product_data.get("brand", "Marque indisponible"),
-                'image_url': product_data.get("images", [""])[0]
-            }
-    return None
+    
 
 def scan_page(request):
     """
@@ -232,28 +171,30 @@ def scan_page(request):
     """
     return render(request, 'scanner/scan.html')
 
+
+
 @csrf_exempt
 def scan_barcode(request):
     """
-    Vue pour traiter les requêtes POST contenant un code-barres dans le body JSON.
-    Exemple de body: { "barcode": "3268840001008" }
+    View to handle POST requests with a barcode in the JSON body.
+    Example of JSON body: { "barcode": "3268840001008" }
     """
     if request.method != 'POST':
         return JsonResponse({'error': 'Only POST allowed'}, status=405)
 
-    # Parse JSON body to extract 'barcode'
+    # Parse JSON body
     try:
         body = json.loads(request.body)
-        barcode = body.get('barcode', None) 
-    except:
-        return JsonResponse({'error': 'No valid JSON body'}, status=400)
+        barcode = body.get('barcode')
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Invalid JSON body'}, status=400)
 
     if not barcode:
         return JsonResponse({'error': 'No barcode provided'}, status=400)
 
-    logger.info(f"Requête reçue avec le code-barres : {barcode}")
+    logger.info(f"Received request with barcode: {barcode}")
 
-    # Vérifier si le produit existe déjà dans la base locale
+    # Check if the product exists in the local database
     try:
         product = Product.objects.get(barcode=barcode)
         return JsonResponse({
@@ -261,62 +202,67 @@ def scan_barcode(request):
             'category': product.category,
             'brand': product.brand,
             'image_url': product.image_url,
-            'recycling_type': product.recycling_type
+            'recycling_type': product.recycling_type,
+            'recycling_bin': product.recycling_bin,
+            'packaging': product.packaging,  # Added packaging field
+            'packaging_materials': product.packaging_materials,  # Added packaging materials
+            'packagings_materials_main': product.packagings_materials_main,  # Added main material
+            'points': get_bin_score(product.recycling_bin)
         })
     except Product.DoesNotExist:
-        pass
+        logger.info(f"Product with barcode {barcode} not found in the local database.")
 
-    # Rechercher d'abord dans OpenFoodFacts
+    # Fetch product data from OpenFoodFacts API
     product_data = fetch_from_openfoodfacts(barcode)
     if product_data:
-        recycling_type = map_category_to_recycling_type(
-            product_data.get("category", ""),
-            product_data.get("packaging", "")
-        )
-        product = Product.objects.create(
-            barcode=barcode,
-            name=product_data.get("name"),
-            category=product_data.get("category"),
-            brand=product_data.get("brand"),
-            image_url=product_data.get("image_url"),
-            recycling_type=recycling_type
-        )
-        return JsonResponse({
-            'name': product.name,
-            'category': product.category,
-            'brand': product.brand,
-            'image_url': product.image_url,
-            'recycling_type': product.recycling_type
-        })
+        try:
+            # Classify the waste and determine recycling bin
+            recycling_bin, _, _ = classifier.classify_waste(
+                product_data.get("packaging", ""),
+                product_data.get("packaging_materials", []),
+                product_data.get("packagings_materials_main", "")
+            )
 
-    # Si non trouvé, chercher dans Barcode Lookup
-    product_data = fetch_from_barcodelookup(barcode)
-    if product_data:
-        recycling_type = map_category_to_recycling_type(product_data.get("category", ""))
-        product = Product.objects.create(
-            barcode=barcode,
-            name=product_data.get("name"),
-            category=product_data.get("category"),
-            brand=product_data.get("brand"),
-            image_url=product_data.get("image_url"),
-            recycling_type=recycling_type
-        )
-        return JsonResponse({
-            'name': product.name,
-            'category': product.category,
-            'brand': product.brand,
-            'image_url': product.image_url,
-            'recycling_type': product.recycling_type
-        })
 
-    return JsonResponse({'error': 'Produit non trouvé dans aucune API'}, status=404)
+            # Save the product to the database
+            product = Product.objects.create(
+                barcode=barcode,
+                name=product_data.get("name"),
+                category=product_data.get("category"),
+                brand=product_data.get("brand"),
+                image_url=product_data.get("image_url"),
+                recycling_type=get_product_type(recycling_bin),
+                recycling_bin=recycling_bin,
+                packaging=product_data.get("packaging", ""),
+                packaging_materials=product_data.get("packaging_materials", []),
+                packagings_materials_main=product_data.get("packagings_materials_main", ""),
+            )
+
+            # Return the product details
+            return JsonResponse({
+                'name': product.name,
+                'category': product.category,
+                'brand': product.brand,
+                'image_url': product.image_url,
+                'recycling_type': product.recycling_type,
+                'recycling_bin': product.recycling_bin,
+                'packaging': product.packaging,
+                'packaging_materials': product.packaging_materials,
+                'packagings_materials_main': product.packagings_materials_main,
+                'points': get_bin_score(recycling_bin)
+            })
+        except Exception as e:
+            logger.error(f"Error while processing product: {e}")
+            return JsonResponse({'error': 'Failed to process product data'}, status=500)
+
+    logger.error(f"Product with barcode {barcode} not found in OpenFoodFacts API.")
+    return JsonResponse({'error': 'Product not found in any API'}, status=404)
+
 
 
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
 import json
 
 from .models import Product, Bin, RecyclingActivity
@@ -324,31 +270,49 @@ from django.core.exceptions import ObjectDoesNotExist
 
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])  # Enforces the user must be authenticated
+@csrf_exempt
 def user_recycling_activity(request):
     """
     GET -> Return all recycling activities for the current user (request.user).
     POST -> Create a new recycling activity and update user points.
     """
     if request.method == "GET":
+        # Fetch and serialize user's recycling activities
         activities = RecyclingActivity.objects.filter(user=request.user).order_by('-date_scanned')
         serializer = RecyclingActivitySerializer(activities, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return JsonResponse(serializer.data, safe=False, status=200)
 
     elif request.method == "POST":
         try:
-            body = request.data
+            body = json.loads(request.body)
+            print(body)
             product_name = body.get("product_name", "")
-            category = body.get("category", "")
+            packaging = body.get("packaging", "")
+            packaging_materials = body.get("packaging_materials", [])
+            packagings_materials_main = body.get("packagings_materials_main","")
+            print(packaging)
+            print("packaging materials ",packaging_materials)
+            print("this is "+packagings_materials_main)
             quantity = int(body.get("quantity", 1))
+            print(packaging_materials)
+            print(packaging)
+            # Map category, packaging, and materials to product type and calculate points
+            bin_color, _ , _ = classifier.classify_waste(
+                packaging,
+                packaging_materials,
+                packagings_materials_main
+            )
+            print(classifier.explain_classification(packaging,packaging_materials,packagings_materials_main))
 
-            product_type = map_category_to_recycling_type(category)  # Map category to product type
-            points_earned = 10 * quantity  # Example logic: 10 points per item
+            print(bin_color)
+            points_earned = get_bin_score(bin_color) * quantity
+            print(points_earned)
 
             # Create the recycling activity
             new_activity = RecyclingActivity.objects.create(
                 user=request.user,
                 product_name=product_name,
-                product_type=product_type,
+                product_type=get_product_type(bin_color),
                 quantity=quantity,
                 points_earned=points_earned,
             )
@@ -357,15 +321,14 @@ def user_recycling_activity(request):
             request.user.total_points += points_earned
             request.user.save()
 
-            return Response({
+            return JsonResponse({
                 "message": "Activity created successfully",
                 "activity_id": new_activity.id,
                 "points_earned": new_activity.points_earned,
                 "product_type": new_activity.product_type,
                 "total_points": request.user.total_points,
-            }, status=status.HTTP_201_CREATED)
+            }, status=201)
 
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        
+            return JsonResponse({"error": str(e)}, status=400)
 

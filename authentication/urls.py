@@ -9,4 +9,5 @@ urlpatterns = [
     path('users/sign-in/', SignInAPIView.as_view(), name='connexion'),
     path('users/profile/', UserDetailView.as_view(), name='information_profile'),
     path('users/points/', get_user_points, name='get_user_points'),
+    
 ]
