@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import SignUpSerializer, SignInSerializer, UserSerializer
+from .serializers import ChangePasswordSerializer, SignUpSerializer, SignInSerializer, UpdateUserSerializer, UserSerializer
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated
 
@@ -74,3 +74,44 @@ def get_user_points(request):
     Returns the current user's total points.
     """
     return Response({"total_points": request.user.total_points}, status=status.HTTP_200_OK)
+
+
+class UpdateUserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        serializer = UpdateUserSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({
+                "message": "Profil mis à jour avec succès",
+                "user": {
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "phone": user.phone,
+                    "commune": user.commune
+                }
+            })
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            user = request.user
+            new_password = serializer.validated_data['new_password']
+            user.set_password(new_password)
+            user.save()
+            
+            # Generate new tokens after password change
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                "message": "Mot de passe changé avec succès",
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            })
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

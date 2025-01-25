@@ -1,372 +1,256 @@
-from collections import Counter
+from collections import defaultdict
+from transformers import AutoTokenizer, AutoModel
+import torch
 from typing import List, Tuple, Dict
-import nltk
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from enum import Enum
-
-class Language(Enum):
-    EN = 'en'
-    FR = 'fr'
 
 class WasteClassifier:
     def __init__(self):
-        """Initialize the multilingual waste classifier with prougeefined rules and weights."""
-        # Download requirouge NLTK data
-        try:
-            nltk.download('punkt', quiet=True)
-            nltk.download('stopwords', quiet=True)
-            nltk.download('averaged_perceptron_tagger', quiet=True)
-        except:
-            print("Note: NLTK data might not be completely downloaded. The classifier will still work.")
-        
-        # Define bin categories with multilingual descriptions and keywords
-        self.bin_categories = {
-            'verte': {
-                'description': {
-                    'en': "Glass (without caps or lids)",
-                    'fr': "Verre (sans bouchons ni couvercles)"
-                },
-                'keywords': {
-                    'en': ["glass", "jar", "glass bottle", "container", "wine bottle", "glass container"],
-                    'fr': ["verre", "bocal", "bouteille en verre", "pot", "bouteille de vin"]
-                },
-                'weight': 1.0,
-                'incompatible_materials': ['plastic', 'plastique', 'metal', 'métal']
-            },
-            'jaune': {
-                'description': {
-                    'en': "Plastic, cardboard and packaging",
-                    'fr': "Plastique, carton et emballages"
-                },
-                'keywords': {
-                    'en': ["plastic", "cardboard", "packaging", "bottle", "container", "wrapper", "box"],
-                    'fr': ["plastique", "carton", "emballage", "bouteille", "conteneur", "boîte"]
-                },
-                'weight': 0.8,
-                'incompatible_materials': []
-            },
-            'bleue': {
-                'description': {
-                    'en': "Paper and newspapers",
-                    'fr': "Papier et journaux"
-                },
-                'keywords': {
-                    'en': ["paper", "newspaper", "magazine", "brochure", "flyer", "mail", "envelope"],
-                    'fr': ["papier", "journal", "magazine", "prospectus", "publicité", "courrier"]
-                },
-                'weight': 0.7,
-                'incompatible_materials': ['plastic', 'plastique', 'metal', 'métal']
-            },
-            'rouge': {
-                'description': {
-                    'en': "Metal",
-                    'fr': "Métal"
-                },
-                'keywords': {
-                    'en': ["metal", "aluminum", "tin", "can", "metal box", "steel"],
-                    'fr': ["métal", "aluminium", "conserve", "boîte métal", "acier"]
-                },
-                'weight': 0.9,
-                'incompatible_materials': []
-            },
-            'noire': {
-                'description': {
-                    'en': "General household waste",
-                    'fr': "Déchets ménagers classiques"
-                },
-                'keywords': {
-                    'en': ["household waste", "general waste", "non-recyclable", "trash", "garbage"],
-                    'fr': ["ordures ménagères", "déchets généraux", "non recyclable", "poubelle"]
-                },
-                'weight': 0.3,
-                'incompatible_materials': []
-            },
-            'marron': {
-                'description': {
-                    'en': "Organic waste",
-                    'fr': "Biodéchets"
-                },
-                'keywords': {
-                    'en': ["organic", "food waste", "compost", "vegetable", "fruit", "garden waste"],
-                    'fr': ["organique", "déchets alimentaires", "compost", "légume", "fruit"]
-                },
-                'weight': 0.9,
-                'incompatible_materials': ['plastic', 'plastique', 'metal', 'métal', 'glass', 'verre']
-            },
-            'special': {
-                'description': {
-                    'en': "Special waste (batteries, electronics, hazardous)",
-                    'fr': "Déchets spéciaux (piles, électroniques, dangereux)"
-                },
-                'keywords': {
-                    'en': ["battery", "electronic", "hazardous", "chemical", "paint", "phone"],
-                    'fr': ["pile", "électronique", "dangereux", "chimique", "peinture", "téléphone"]
-                },
-                'weight': 1.0,
-                'incompatible_materials': []
-            }
-        }
-        
-        # Multilingual material synonyms
-        self.material_synonyms = {
-            # English
-            'pet': 'plastic',
-            'hdpe': 'plastic',
-            'ldpe': 'plastic',
-            'pp': 'plastic',
-            'ps': 'plastic',
-            'pvc': 'plastic',
-            'aluminum': 'metal',
-            'aluminium': 'metal',
-            'steel': 'metal',
-            'iron': 'metal',
-            'tin': 'metal',
-            # French
-            'plastique': 'plastic',
-            'métal': 'metal',
-            'aluminium': 'metal',
-            'acier': 'metal',
-            'fer': 'metal',
-            'étain': 'metal',
+        self.tokenizer = AutoTokenizer.from_pretrained('distilbert-base-multilingual-cased')
+        self.model = AutoModel.from_pretrained('distilbert-base-multilingual-cased')
+        self.material_embeddings = {}
+
+        # Expanded synonym dictionary with better multilingual coverage
+        self.synonym_dict = {
+            # Metal
+            "aluminium": "metal", "aluminum": "metal", "metal": "metal",
+            "canette": "metal", "can": "metal", "tin": "metal", "steel": "metal",
+            "ferro": "metal", "boîte": "metal", "couvercle": "metal",
+            "opercule": "metal", "conserva": "metal", "lata": "metal",
+            
+            # Plastic
+            "pet": "plastic", "pet-1": "plastic", "hdpe-2": "plastic",
+            "pp-5": "plastic", "polypropylene": "plastic", "plastic": "plastic",
+            "polystyrene": "plastic", "sachet": "plastic", "film": "plastic",
+            "sac": "plastic", "bottle": "plastic", "bouteille": "plastic",
+            "emballage": "plastic", "packaging": "plastic", "flacon": "plastic",
+            
+            # Glass
+            "verre": "glass", "glass": "glass", "bocal": "glass",
+            "jar": "glass", "pot": "glass", "flacon": "glass",
+            
+            # Paper
+            "paper": "paper", "papier": "paper", "cardboard": "paper",
+            "carton": "paper", "tetra-pak": "paper", "tetra": "paper",
+            "tetra brik": "paper", "kraft": "paper", "boîte": "paper",
+            "enveloppe": "paper", "journal": "paper",
+            
+            # Organic
+            "compost": "organic", "biodéchets": "organic", "shells": "organic",
+            "peel": "organic", "food": "organic", "biodegradable": "organic"
         }
 
-    def detect_language(self, text: str) -> str:
-        """Detect if the text is primarily English or French."""
-        fr_indicators = ['le', 'la', 'les', 'de', 'du', 'des', 'en', 'bouteille', 'poubelle']
-        en_indicators = ['the', 'of', 'in', 'bottle', 'container', 'bin', 'waste']
-        
-        text_lower = text.lower()
-        fr_count = sum(1 for word in fr_indicators if word in text_lower)
-        en_count = sum(1 for word in en_indicators if word in text_lower)
-        
-        return 'fr' if fr_count > en_count else 'en'
+        # Enhanced reference material descriptions
+        self.reference_materials = {
+            'metal': self._get_embedding(
+                "metal aluminium steel iron canette boîte-de-conserve "
+                "capsule opercule couvercle conserva lata metal-container"
+            ),
+            'plastic': self._get_embedding(
+                "plastic bottle sachet film bag packaging pet hdpe polypropylene "
+                "polystyrene container emballage flacon bouteille plastique"
+            ),
+            'glass': self._get_embedding(
+                "glass verre bocal jar pot glass-container flacon vitre "
+                "bouteille-en-verre glass-bottle"
+            ),
+            'paper': self._get_embedding(
+                "paper cardboard carton tetra-pak envelope kraft journal "
+                "paper-packaging box sleeve corrugated non-corrugated"
+            ),
+            'organic': self._get_embedding(
+                "organic food compost vegetable fruit peel shells "
+                "biodegradable garden-waste biodéchets"
+            )
+        }
 
-    def preprocess_text(self, text: str) -> str:
-        """Preprocess text using simple tokenization and stopword removal."""
-        # Converte to lowercase
-        text = text.lower()
-        
-        # Choose appropriate stopwords based on detected language
-        lang = self.detect_language(text)
-        try:
-            stop_words = set(stopwords.words('french' if lang == 'fr' else 'english'))
-        except:
-            stop_words = set()
-        
-        # Tokenize and remove stopwords
-        tokens = word_tokenize(text)
-        tokens = [word for word in tokens if word not in stop_words]
-        
-        return " ".join(tokens)
-
-    # Only showing the modified methods - the rest of the class remains the same
-
-    def _clean_material_string(self, material: str) -> str:
-        """
-        Clean material string by removing language prefixes and trimming.
-        
-        Args:
-            material (str): Material string possibly with language prefix (e.g., 'en:plastic' or 'fr:plastique')
-        
-        Returns:
-            str: Cleaned material string
-        """
-        if not material:
-            return ""
-            
-        # Remove language prefix if present
-        if material.startswith(('en:', 'fr:')):
-            material = material[3:]
-        
-        return material.strip().lower()
-    
-    def _adjust_scores_for_combinations(self, scores: Dict[str, float], materials: List[str]) -> None:
-        """Adjust scores based on material combinations and special rules."""
-        # Standardize materials using synonyms
-        std_materials = []
-        for material in materials:
-            for synonym, std_term in self.material_synonyms.items():
-                if synonym in material:
-                    std_materials.append(std_term)
-                    break
-            else:
-                std_materials.append(material)
-
-        # Count unique materials
-        material_count = Counter(std_materials)
-        
-        # Apply combination rules
-        if len(material_count) > 1:
-            if 'plastic' in material_count and 'metal' in material_count:
-                scores['jaune'] *= 1.5  # Preference for jaune bin for mixed materials
-                scores['rouge'] *= 0.5
-            
-            if any(glass in material_count for glass in ['glass', 'verre']):
-                scores['verte'] *= 0.3  # rougeuce score for glass bin
-                scores['noire'] *= 1.5  # Increase score for general waste
-        
-        # Check for incompatible materials
-        for bin_type, config in self.bin_categories.items():
-            if any(material in std_materials for material in config['incompatible_materials']):
-                scores[bin_type] *= 0.1
-    
-    def _adjust_scores_for_main_material(self, scores: Dict[str, float], main_material: str) -> None:
-        """Adjust scores when a main material is specified."""
-        # Standardize the main material using synonyms
-        std_main_material = main_material
-        for synonym, std_term in self.material_synonyms.items():
-            if synonym in main_material:
-                std_main_material = std_term
-                break
-        
-        # Boost scores based on main material type
-        material_bin_mapping = {
-            'plastic': 'jaune',
+        self.bin_mapping = {
             'metal': 'rouge',
+            'plastic': 'jaune',
             'glass': 'verte',
             'paper': 'bleue',
-            'organic': 'marron',
-            'hazardous': 'special'
+            'organic': 'marron'
         }
-        
-        # If we have a mapping for this material, heavily boost its score
-        if std_main_material in material_bin_mapping:
-            target_bin = material_bin_mapping[std_main_material]
-            for bin_type in scores:
-                if bin_type == target_bin:
-                    scores[bin_type] *= 3.0  # Triple the score for the matching bin
-                else:
-                    scores[bin_type] *= 0.3  # Reduce other scores
 
-    def calculate_material_scores(self, packaging: str, materials: List[str], main_material: str = "") -> Tuple[Dict[str, float], str]:
-        """Calculate scores for each bin category based on packaging and materials."""
-        # Detect language
-        lang = self.detect_language(packaging)
-        
-        # Preprocess input
-        processed_packaging = self.preprocess_text(packaging)
-        processed_materials = [self.preprocess_text(self._clean_material_string(m)) for m in materials]
-        processed_main = self.preprocess_text(self._clean_material_string(main_material)) if main_material else ""
-        
-        # If main_material is present, only use that for scoring
-        if processed_main:
-            combined_text = f"{processed_main}"
-        else:
-            # Otherwise use all materials
-            combined_text = f"{processed_packaging} {' '.join(processed_materials)}"
-        
-        # Initialize scores
-        scores = {bin_type: 0.0 for bin_type in self.bin_categories.keys()}
-        
-        # Calculate base scores from keywords
-        for bin_type, config in self.bin_categories.items():
-            # Check keywords in both languages
-            keyword_matches = sum(1 for keyword in config['keywords']['en'] + config['keywords']['fr']
-                                if keyword in combined_text)
-            scores[bin_type] = keyword_matches * config['weight']
-        
-        # If there's no main material, adjust scores based on combinations
-        if not processed_main:
-            self._adjust_scores_for_combinations(scores, processed_materials)
-        else:
-            # If there is a main material, make its score dominant
-            self._adjust_scores_for_main_material(scores, processed_main)
-        
-        return scores, lang
+        self.ignore_tokens = {"non", "spécifié", "specifié", "none", "unknown", "recycle"}
 
-
-
-    def classify_waste(self, packaging: str, materials: List[str] = None, main_material: str = "") -> Tuple[str, str, float]:
-        """
-        Classify waste item into appropriate bin category.
+    def _exact_dict_lookup(self, text: str) -> str:
+        lower_text = text.lower().strip()
         
-        Args:
-            packaging (str): The packaging description
-            materials (List[str]): List of materials
-            main_material (str): The main/primary material (takes precedence if present)
-        
-        Returns:
-            tuple of (bin_color, description, confidence_score)
-        """
-        materials = materials or []
-        
-        # Calculate scores and detect language
-        scores, lang = self.calculate_material_scores(packaging, materials, main_material)
-        
-        # Get the bin with highest score
-        best_bin = max(scores.items(), key=lambda x: x[1])
-        bin_type = best_bin[0]
-        confidence = best_bin[1]
-        
-        # Normalize confidence score to 0-1 range
-        max_possible_score = 5.0
-        confidence = min(confidence / max_possible_score, 1.0)
-        
-        return (bin_type, 
-                self.bin_categories[bin_type]['description'][lang],
-                confidence)
-
-    def explain_classification(self, packaging: str, materials: List[str] = None, main_material: str = "") -> str:
-        """Provide detailed explanation for the classification decision."""
-        materials = materials or []
-        scores, lang = self.calculate_material_scores(packaging, materials, main_material)
-        classification = self.classify_waste(packaging, materials, main_material)
-        
-        if lang == 'fr':
-            explanation = [
-                f"Résultat de la classification: {classification[0]} (confiance: {classification[2]:.2%})",
-                f"Description: {classification[1]}",
-            ]
-            if main_material:
-                explanation.append(f"Matériau principal: {main_material}")
-            explanation.append("\nScores par poubelle:")
-        else:
-            explanation = [
-                f"Classification result: {classification[0]} (confidence: {classification[2]:.2%})",
-                f"Description: {classification[1]}",
-            ]
-            if main_material:
-                explanation.append(f"Main material: {main_material}")
-            explanation.append("\nBin scores:")
-        
-        for bin_type, score in sorted(scores.items(), key=lambda x: x[1], reverse=True):
-            explanation.append(f"- {bin_type}: {score:.2f}")
+        # Special handling for composite materials
+        if "tetra" in lower_text:
+            return "paper"
+        if "bouteille" in lower_text and "verre" in lower_text:
+            return "glass"
             
-        return "\n".join(explanation)
+        return self.synonym_dict.get(lower_text, "")
 
-def get_bin_score( bin_color: str) -> int:
-    """
-    Converte bin color to a numerical score based on recyclability.
-    
-    Args:
-        bin_color (str): The color/type of the bin (e.g., 'verte', 'jaune', etc.)
+    def _get_embedding(self, text: str) -> torch.Tensor:
+        if text in self.material_embeddings:
+            return self.material_embeddings[text]
+            
+        inputs = self.tokenizer(text, return_tensors='pt', padding=True, truncation=True)
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+            embedding = outputs.last_hidden_state.mean(dim=1)
+        self.material_embeddings[text] = embedding
+        return embedding
+
+    def _similarity_score(self, text1: str, text2: str) -> float:
+        emb1 = self._get_embedding(text1)
+        emb2 = self._get_embedding(text2)
+        return torch.nn.functional.cosine_similarity(emb1, emb2).item()
+
+    def _classify_single_material(self, mat: str) -> str:
+        clean_mat = mat.lower().replace('en:', '').replace('fr:', '').strip()
+        clean_mat = ''.join([c for c in clean_mat if c.isalnum() or c in {'-', '_'}])
+
+        # Handle compound terms
+        if '-' in clean_mat:
+            for part in clean_mat.split('-'):
+                if override := self._exact_dict_lookup(part):
+                    return override
+
+        if override := self._exact_dict_lookup(clean_mat):
+            return override
+
+        if clean_mat in self.ignore_tokens or len(clean_mat) < 2:
+            return ""
+
+        sim_map = {
+            ref_type: self._similarity_score(clean_mat, ref_type)
+            for ref_type in self.reference_materials
+        }
+        return max(sim_map.items(), key=lambda x: x[1])[0]
+
+    def calculate_scores(self,
+                         packaging: str,
+                         materials: List[str],
+                         packaging_materials_main: str = "") -> Dict[str, float]:
+        scores = defaultdict(float)
         
-    Returns:
-        int: Score value representing recyclability (1-10)
+        # Early exit if no usable data
+        if not packaging and not materials and not packaging_materials_main:
+            return scores
+
+        # 0) Check for exact matches first (high reliability)
+        exact_matches = []
+        
+        # Process packaging materials main first if exists
+        if packaging_materials_main:
+            main_clean = packaging_materials_main.lower().replace('en:', '').replace('fr:', '').strip()
+            if main_clean in self.synonym_dict:
+                return {self.bin_mapping[self.synonym_dict[main_clean]]: 100.0}  # Max confidence
+
+        # 1) Process packaging text with exact match check
+        if packaging.strip().lower() not in self.ignore_tokens:
+            tokens = []
+            for seg in packaging.replace('-', ' ').split(','):
+                tokens.extend([part.strip() for part in seg.split()])
+                
+            for tok in tokens:
+                lower_tok = tok.lower()
+                if lower_tok in self.synonym_dict:
+                    exact_matches.append(lower_tok)
+                elif standard_mat := self._classify_single_material(tok):
+                    bin_color = self.bin_mapping[standard_mat]
+                    multiplier = 1.5
+                    if self._exact_dict_lookup(tok.lower()):
+                        scores[bin_color] += 1.0 * multiplier
+                    else:
+                        s = self._similarity_score(tok.lower(), standard_mat)
+                        scores[bin_color] += s * multiplier
+
+        # 2) Process materials list with exact match check
+        material_exact_matches = []
+        for mat in materials:
+            lower_mat = mat.lower()
+            if lower_mat in self.synonym_dict:
+                material_exact_matches.append(lower_mat)
+            elif standard_mat := self._classify_single_material(mat):
+                bin_color = self.bin_mapping[standard_mat]
+                multiplier = 2.0
+                if self._exact_dict_lookup(mat.lower()):
+                    scores[bin_color] += 1.0 * multiplier
+                else:
+                    s = self._similarity_score(mat.lower(), standard_mat)
+                    scores[bin_color] += s * multiplier
+
+        # 3) Handle exact matches with maximum confidence
+        if exact_matches or material_exact_matches:
+            all_matches = exact_matches + material_exact_matches
+            match_counts = defaultdict(int)
+            for match in all_matches:
+                category = self.synonym_dict[match]
+                match_counts[category] += 1
+            
+            if match_counts:
+                main_category = max(match_counts.items(), key=lambda x: x[1])[0]
+                return {self.bin_mapping[main_category]: 100.0}
+
+        # 4) Handle material combinations
+        elif len(materials) > 1:
+            detected = {self._classify_single_material(m) for m in materials}
+            if 'plastic' in detected and 'metal' in detected:
+                scores['jaune'] *= 2.0
+            if 'paper' in detected and 'plastic' in detected:
+                scores['bleue'] *= 1.5
+
+        return dict(scores)
+
+    def classify_waste(self,
+                       packaging: str,
+                       materials: List[str] = None,
+                       packaging_materials_main: str = "") -> Tuple[str, float]:
+        materials = materials or []
+        
+        # Immediate unknown if no data
+        if not packaging and not materials and not packaging_materials_main:
+            return ("unknown", 0.0)
+        
+        # Check for main material override
+        if packaging_materials_main:
+            main_clean = packaging_materials_main.lower().replace('en:', '').replace('fr:', '').strip()
+            if main_clean in self.synonym_dict:
+                return (self.bin_mapping[self.synonym_dict[main_clean]], 1.0)
+
+        scores = self.calculate_scores(packaging, materials, packaging_materials_main)
+
+        if not scores:
+            return ("unknown", 0.0)
+
+        best_bin, best_score = max(scores.items(), key=lambda x: x[1])
+        
+        # Confidence thresholds
+        if best_score < 0.5:  # Adjust this threshold as needed
+            return ("unknown", 0.0)
+            
+        confidence = min(best_score, 1.0)
+        return (best_bin, confidence)
+
+
+# Helper functions remain the same
+
+##################################################################
+# HELPER FUNCTIONS
+##################################################################
+def get_bin_score(bin_color: str) -> int:
+    """
+    Convert bin color to a numerical score based on recyclability.
     """
     scoring_system = {
-        'verte': 4,      # Glass is highly recyclable
-        'jaune': 2,     # Plastic/cardboard mixed recyclables
-        'bleue': 3,       # Paper is very recyclable
-        'rouge': 6,        # Metal is highly recyclable
-        'noire': 3,      # General waste - low score
-        'marron': 6,      # Organic waste - good for environment
-        'special': 10,   # Special waste needs proper handling
+        'verte': 4,    # Glass is highly recyclable
+        'jaune': 2,    # Plastic/cardboard
+        'bleue': 3,    # Paper
+        'rouge': 6,    # Metal
+        'noire': 3,    # General waste
+        'marron': 6,   # Organic waste
+        'special': 10, # Special/hazardous
     }
-    
-    return scoring_system.get(bin_color, 1)  # Default score of 1 if bin color not found
+    return scoring_system.get(bin_color, 1)
 
-def get_product_type( bin_color: str) -> str:
-    """
-    Determine the general product type based on the bin color.
-    
-    Args:
-        bin_color (str): The color/type of the bin (e.g., 'verte', 'jaune', etc.)
-        
-    Returns:
-        str: Description of the product type
-    """
+def get_product_type(bin_color: str) -> str:
+    if bin_color == "unknown":
+        return "Unknown Product Type"
     product_types = {
         'verte': "Glass Product",
         'jaune': "Mixed Recyclable Product",
@@ -376,6 +260,4 @@ def get_product_type( bin_color: str) -> str:
         'marron': "Organic Product",
         'special': "Hazardous/Special Product"
     }
-    
     return product_types.get(bin_color, "Unknown Product Type")
-
