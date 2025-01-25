@@ -1,0 +1,545 @@
+[
+  {
+    "barcode": "3017620425035",
+    "name": "Nutella",
+    "packaging": "Composites multicouches,Plastique,Carton,Verre,PP 5 - Polypropylène,Verre transparent,Carton non ondulé,82 C/X,82 C/PAP,en:Bocal",
+    "packaging_materials": [
+      "en:clear-glass",
+      "en:non-corrugated-cardboard",
+      "en:paper",
+      "en:pp-5-polypropylene",
+      "xx:82-c-pap"
+    ],
+    "packaging_materials_main": "en:glass",
+    "bin_color": "verte"
+  },
+  {
+    "barcode": "3017620422003",
+    "name": "Nutella",
+    "packaging": "Plastic,fr:Pot en verre",
+    "packaging_materials": [
+      "en:clear-glass",
+      "en:non-corrugated-cardboard",
+      "en:pp-5-polypropylene",
+      "xx:82-c-pap"
+    ],
+    "packaging_materials_main": "en:glass",
+    "bin_color": "verte"
+  },
+  {
+    "barcode": "5449000000996",
+    "name": "Coca-Cola",
+    "packaging": "Métal,Métaux recyclables,Aluminium,Boîte de conserve ou canette,Canette,en:Recycler",
+    "packaging_materials": [
+      "en:aluminium"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "rouge"
+  },
+  {
+    "barcode": "50184453",
+    "name": "Marmite",
+    "packaging": "Glass,Pot,Glass-jar,Pp-cap,fr:Green dot",
+    "packaging_materials": [
+      "en:glass",
+      "en:paper",
+      "en:pp-5-polypropylene"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "verte"
+  },
+  {
+    "barcode": "4311501688144",
+    "name": "Kilishi",
+    "packaging": "Non spécifié",
+    "packaging_materials": [
+      "en:pp-5-polypropylene"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "3451080155161",
+    "name": "Huile D’olive Vierge Extra Produit De France",
+    "packaging": "Non spécifié",
+    "packaging_materials": [
+      "en:metal"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "rouge"
+  },
+  {
+    "barcode": "5055904223289",
+    "name": "High Protein Chicken & Chorizo Paella",
+    "packaging": "Non spécifié",
+    "packaging_materials": [
+      "en:cardboard",
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "bleue"
+  },
+  {
+    "barcode": "3474341105842",
+    "name": "Chocolat noir 65% de cacao",
+    "packaging": "Non spécifié",
+    "packaging_materials": [
+      "en:cardboard"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "bleue"
+  },
+  {
+    "barcode": "54491472",
+    "name": "Coca Cola 500ml",
+    "packaging": "Plastic, Pet-polyethylene-terephthalate, Bottle, en:pet-bottle",
+    "packaging_materials": [
+      "en:hdpe-2-high-density-polyethylene",
+      "en:pet-1-polyethylene-terephthalate",
+      "en:pp-5-polypropylene"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "7300400481588",
+    "name": "FIBRES",
+    "packaging": "Carta,Busta",
+    "packaging_materials": [
+      "en:paper"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "bleue"
+  },
+  {
+    "barcode": "3068320123264",
+    "name": "La salvetat",
+    "packaging": "Plastique,Bouteille",
+    "packaging_materials": [
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "3225350000501",
+    "name": "Pulco Zitrone",
+    "packaging": "Glas,Flasche",
+    "packaging_materials": [
+      "en:glass"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "verte"
+  },
+  {
+    "barcode": "3608580065340",
+    "name": "Pâte à tartiner noisettes et cacao",
+    "packaging": "fr:Bocal en verre, fr:Capsule en métal, en:glass-jar, en:steel-lid",
+    "packaging_materials": [
+      "en:glass",
+      "en:steel"
+    ],
+    "packaging_materials_main": "en:glass",
+    "bin_color": "verte"
+  },
+  {
+    "barcode": "3155251205296",
+    "name": "Tartine Doux",
+    "packaging": "Barquette,en:Opercule en métal,Plastique",
+    "packaging_materials": [
+      "en:metal"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "rouge"
+  },
+  {
+    "barcode": "3041090063206",
+    "name": "Cracotte Céréales Complètes",
+    "packaging": "Plastic,Cardboard,fr:Boîte carton,fr:Etui en carton,fr:Plastique à jeter,fr:Sachet en plastique,fr:Étui carton à recycler",
+    "packaging_materials": [
+      "en:cardboard",
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "bleue"
+  },
+  {
+    "barcode": "20995553",
+    "name": "Edelbitter mild 85%",
+    "packaging": "Cardboard,Non-corrugated cardboard",
+    "packaging_materials": [
+      "en:non-corrugated-cardboard",
+      "xx:82-c-pap"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "bleue"
+  },
+  {
+    "barcode": "20022464",
+    "name": "Extra dark chocolate 74% cacao",
+    "packaging": "Plastikowe,Mixed plastic-packet,Sachet plastique de 3g,",
+    "packaging_materials": [
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "3155250358788",
+    "name": "Primevère",
+    "packaging": "Plastic,Box,Fresh,Tray,fr:Opercule en métal",
+    "packaging_materials": [
+      "en:metal",
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "5449000000286",
+    "name": "Coca-Cola",
+    "packaging": "Plastic",
+    "packaging_materials": [
+      "en:pet-1-polyethylene-terephthalate",
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "7394376616228",
+    "name": "Oat Drink Barista Edition",
+    "packaging": "Tetra Pak,Container,Card-carton,FSC Mix Board,Hdpe-cap,Paper carton,Plastic cap,Produkt",
+    "packaging_materials": [
+      "en:cardboard",
+      "en:hdpe-2-high-density-polyethylene",
+      "en:paper",
+      "en:tetra-pak"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "bleue"
+  },
+  {
+    "barcode": "06175700",
+    "name": "Tartines craquantes au sarrasin imp",
+    "packaging": "Plastic,Cardboard",
+    "packaging_materials": [
+      "en:cardboard",
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "3045140105502",
+    "name": "Alpesi tejcsokoládé",
+    "packaging": "Plastique,Étui",
+    "packaging_materials": [
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "3587220002252",
+    "name": "La gâche tranchée",
+    "packaging": "Plastic,Bag,fr:Film en plastique",
+    "packaging_materials": [
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "3760020507350",
+    "name": "Pur beurre de cacahuète",
+    "packaging": "Metal,Glass,Jar,Lid",
+    "packaging_materials": [
+      "en:glass",
+      "en:steel"
+    ],
+    "packaging_materials_main": "en:glass",
+    "bin_color": "verte"
+  },
+  {
+    "barcode": "3229820019307",
+    "name": "Flocons d'avoine",
+    "packaging": "pet-bottle, hdpe-cap, en:paper-carton",
+    "packaging_materials": [
+      "en:hdpe-2-high-density-polyethylene"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "3017620429484",
+    "name": "Nutella",
+    "packaging": "Bouchon ou couvercle,Plastique,Verre,Pot,Support,Couvercle,Opercule,Tarro,container",
+    "packaging_materials": [
+      "en:clear-glass",
+      "en:non-corrugated-cardboard",
+      "en:paper",
+      "en:pp-5-polypropylene",
+      "xx:82-c-pap"
+    ],
+    "packaging_materials_main": "en:glass",
+    "bin_color": "verte"
+  },
+  {
+    "barcode": "3041090063114",
+    "name": "Lu - Cracotte Original Wheat Slices, 250g (8.8oz)",
+    "packaging": "fr:Carton recyclable,fr:Plastique jetable",
+    "packaging_materials": [
+      "en:cardboard",
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "5411188124689",
+    "name": "Ohne Zucker Hafer",
+    "packaging": "Tetra Pak,Composite-carton,Tetra Brik Aseptic,hu:Produkt",
+    "packaging_materials": [
+      "en:plastic",
+      "en:tetra-brik-aseptic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "bleue"
+  },
+  {
+    "barcode": "59032823",
+    "name": "nutella",
+    "packaging": "",
+    "packaging_materials": [
+      "en:aluminium",
+      "en:clear-glass",
+      "en:non-corrugated-cardboard",
+      "en:paper-and-plastic",
+      "en:plastic"
+    ],
+    "packaging_materials_main": "en:glass",
+    "bin_color": "verte"
+  },
+  {
+    "barcode": "3046920028004",
+    "name": "Excellence 70% Cocoa Intense Dark",
+    "packaging": "Aluminium-wrapper,Card-carton,Container",
+    "packaging_materials": [
+      "en:aluminium",
+      "en:non-corrugated-cardboard"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "rouge"
+  },
+  {
+    "barcode": "7613035676497",
+    "name": "Ricoré original",
+    "packaging": "Boîte,Boîte de conserve ou canette,Conserve,Canette,Boîte en métal",
+    "packaging_materials": [
+      "en:metal",
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "bleue"
+  },
+  {
+    "barcode": "5449000054227",
+    "name": "Coca-Cola",
+    "packaging": "Plastika,en:pe-polyethylene,en:hdpe-high-density-polyethylene,en:pet-polyethylene-terephthalate,Boca,fr:Bouchon en plastique,it:bottiglia pet,pt:Pet-bottle,pt:Pp-lid,pt:Stück",
+    "packaging_materials": [
+      "en:hdpe-2-high-density-polyethylene",
+      "en:pet-1-polyethylene-terephthalate",
+      "en:pp-5-polypropylene"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "16256866",
+    "name": "1848 Chocolat en poudre",
+    "packaging": "",
+    "packaging_materials": [
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "3366321051983",
+    "name": "Oméga 3® Doux",
+    "packaging": "Plastique,Barquette",
+    "packaging_materials": [
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "5449000131836",
+    "name": "Zero Sugar",
+    "packaging": "RECYCLE ME AGAIN THIS BOTTLE IS MADE FROM 100% RECYCLED PLASTIC*",
+    "packaging_materials": [
+      "en:pet-1-polyethylene-terephthalate",
+      "en:pp-5-polypropylene"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "7613035974685",
+    "name": "hepar",
+    "packaging": "Bouchon en plastique,Bouteille en plastique",
+    "packaging_materials": [
+      "en:hdpe-2-high-density-polyethylene",
+      "en:rpet-transparent"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "5010029000016",
+    "name": "Weetabix",
+    "packaging": "Box, Container, Card-box, Paper-sleeve",
+    "packaging_materials": [
+      "en:cardboard",
+      "en:paper"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "bleue"
+  },
+  {
+    "barcode": "3229820782560",
+    "name": "Muesli Superfruits",
+    "packaging": "fr:Sachet plastique à jeter",
+    "packaging_materials": [
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "3088543506255",
+    "name": "Sunny Via Agave syrup squeeze bottle imp",
+    "packaging": "Bouchon plastique,Flacon plastique",
+    "packaging_materials": [
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "verte"
+  },
+  {
+    "barcode": "3017760542890",
+    "name": "Pain grillé au blé complet",
+    "packaging": "Plastique, Carton",
+    "packaging_materials": [
+      "en:cardboard",
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "bleue"
+  },
+  {
+    "barcode": "4056489007180",
+    "name": "pain de mie grandes tranches spécial sandwich complet",
+    "packaging": "Sachet,Attache",
+    "packaging_materials": [
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "7622210713889",
+    "name": "Belvita Original Petit-Déjeuner miel et pépites de chocolat",
+    "packaging": "Carton,Sachet,Plastique",
+    "packaging_materials": [],
+    "packaging_materials_main": "",
+    "bin_color": "bleue"
+  },
+  {
+    "barcode": "3061990143365",
+    "name": "Biscuits goût chocolat",
+    "packaging": "1 cartonnette,1 étui",
+    "packaging_materials": [
+      "en:cardboard",
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "3366321052386",
+    "name": "st hubert bio & végétal",
+    "packaging": "Bocal,Barquette,Opercule en métal,Pot en carton,Couvercle en carton",
+    "packaging_materials": [
+      "en:cardboard",
+      "en:metal"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "verte"
+  },
+  {
+    "barcode": "3256540000698",
+    "name": "Pains au lait x10",
+    "packaging": "Plastique,Sachet,Clip en plastique,Clip et sachet plastique à jeter,Pensez au tri!,Point vert,Sachet en plastique",
+    "packaging_materials": [
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "3046920028363",
+    "name": "Excellence 85% Cacao Rich Dark",
+    "packaging": "Cartão,Papel cartonado,es:Caja de cartón,Papel de aluminio,ro:Produkt",
+    "packaging_materials": [
+      "en:aluminium",
+      "en:non-corrugated-cardboard"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "marron"
+  },
+  {
+    "barcode": "3229820100234",
+    "name": "Fourrés Chocolat Noir",
+    "packaging": "Étui,Carton,Plastique,Sec,Film",
+    "packaging_materials": [
+      "en:cardboard",
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "bleue"
+  },
+  {
+    "barcode": "7300400481571",
+    "name": "wasa",
+    "packaging": "Papier",
+    "packaging_materials": [
+      "en:paper"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "bleue"
+  },
+  {
+    "barcode": "3175680011442",
+    "name": "Biscuit soja orange",
+    "packaging": "Plastic, Container, Dry",
+    "packaging_materials": [
+      "en:plastic"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "jaune"
+  },
+  {
+    "barcode": "3046920029780",
+    "name": "Doux 70% noir subtil",
+    "packaging": "Metall,Wiederverwertbare Metalle,Aluminium,Tablettverpackung,en:container",
+    "packaging_materials": [
+      "en:aluminium",
+      "en:non-corrugated-cardboard"
+    ],
+    "packaging_materials_main": "",
+    "bin_color": "rouge"
+  }
+]
