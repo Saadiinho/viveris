@@ -11,10 +11,11 @@ class SignUpAPIView(APIView):
     def post(self, request):
         serializer = SignUpSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
+            user = serializer.save()  # create user after validation
             refresh = RefreshToken.for_user(user)
             access_token = str(refresh.access_token)
             refresh_token = str(refresh)
+
             return Response({
                 "message": "Utilisateur créé avec succès",
                 "access_token": access_token,
@@ -27,9 +28,9 @@ class SignUpAPIView(APIView):
                     "commune": user.commune
                 }
             }, status=status.HTTP_201_CREATED)
+
+        # If invalid, return errors
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 User = get_user_model()
 
 class SignInAPIView(APIView):
