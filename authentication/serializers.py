@@ -6,24 +6,38 @@ from rest_framework import status
 from rest_framework.views import APIView
 
 
+
 class SignUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['password', 'email', 'first_name', 'last_name', 'phone', 'commune']
 
+    def validate(self, data):
+        # 1) Check if an account with this email already exists:
+        email = data['email']
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError({"email": "Cet e-mail est déjà utilisé."})
+
+        # 2) If phone is provided, ensure it's unique
+        phone = data.get('phone', None)
+        if phone:
+            if User.objects.filter(phone=phone).exists():
+                raise serializers.ValidationError({"phone": "Ce numéro est déjà utilisé."})
+
+        return data
+
     def create(self, validated_data):
-        # Crée un utilisateur avec un mot de passe sécurisé
-        user = user = User.objects.create_user(
-            username=validated_data['email'],  # Le username est remplacé par l'email
+        # Create a user, using email as username
+        user = User.objects.create_user(
+            username=validated_data['email'],   # for AbstractUser
             email=validated_data['email'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
             password=validated_data['password'],
-            phone=validated_data['phone'],
-            commune=validated_data['commune']
+            phone=validated_data.get('phone', None),
+            commune=validated_data.get('commune', None),
         )
         return user
-    
 
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
