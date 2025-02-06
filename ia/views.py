@@ -38,7 +38,7 @@ class WasteClassificationView(APIView):
             )
 
         # Get confidence threshold from request or use default
-        confidence_threshold = float(request.data.get('confidence_threshold', 0.7))
+        confidence_threshold = float(request.data.get('confidence_threshold', 1.5))
 
         # Make prediction
         result = waste_classifier.predict_image(image_file, confidence_threshold)

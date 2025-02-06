@@ -31,7 +31,7 @@ class WasteClassifier:
         img = tf.expand_dims(img, axis=0)
         return img
 
-    def predict_image(self, image_file, confidence_threshold=0.7):
+    def predict_image(self, image_file, confidence_threshold=2):
         """
         Predict the waste category for an uploaded image and return all class scores.
         """
@@ -109,7 +109,7 @@ def get_bin_score(bin_color: str) -> int:
 
 def get_product_type(bin_color: str) -> str:
     if bin_color == "unknown":
-        return "Unknown Product Type"
+        return "Unknown"
     product_types = {
         'verte': "Glass Product",
         'jaune': "Mixed Recyclable Product",
@@ -119,7 +119,7 @@ def get_product_type(bin_color: str) -> str:
         'marron': "Organic Product",
         'special': "Hazardous/Special Product"
     }
-    return product_types.get(bin_color, "Unknown Product Type")
+    return product_types.get(bin_color, "Unknown")
 
 # Create a singleton instance
 waste_classifier = WasteClassifier()
