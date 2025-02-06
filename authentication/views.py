@@ -18,8 +18,8 @@ class SignUpAPIView(APIView):
 
             return Response({
                 "message": "Utilisateur créé avec succès",
-                "access_token": access_token,
-                "refresh_token": refresh_token,
+                "access": access_token,
+                "refresh": refresh_token,
                 "user": {
                     "email": user.email,
                     "first_name": user.first_name,

@@ -20,6 +20,7 @@ from .models import Product, Bin, RecyclingActivity
 from django.core.exceptions import ObjectDoesNotExist
 logger = logging.getLogger(__name__)
 classifier = WasteClassifier()
+
 @csrf_exempt
 @require_http_methods(["GET", "POST", "PUT", "PATCH", "DELETE"])
 def bin_managed(request, bin_id=None):
@@ -245,6 +246,7 @@ def scan_barcode(request):
             return JsonResponse({'error': 'Failed to process product data'}, status=500)
 
     return JsonResponse({'error': 'Product not found in any API'}, status=404)
+
 
 @api_view(["GET", "POST"])
 @permission_classes([IsAuthenticated])
