@@ -10,7 +10,7 @@ class User(AbstractUser):
     commune = models.CharField(max_length=100, null=True, blank=True)
     total_points = models.IntegerField(default=0)
     avatar_name = models.CharField(max_length=50, unique=True, blank=True, null=True)  # Added null=True
-
+    
     # Lists for generating avatar names
     ADJECTIVES = [
         "Rapide", "Agile", "Sage", "Malin", "Brave", "Rusé", "Habile",

@@ -1,0 +1,215 @@
+{
+    "quiz": [
+      {
+        "question": "Pourquoi est-il important de recycler ?",
+        "options": [
+          "Pour créer de nouveaux déchets",
+          "Pour économiser les ressources et limiter la pollution",
+          "Parce que c'est une obligation légale",
+          "Pour obtenir de l'argent"
+        ],
+        "answer": "Pour économiser les ressources et limiter la pollution"
+      },
+      {
+        "question": "Que signifie le symbole des trois flèches formant un triangle ?",
+        "options": [
+          "Produit biodégradable",
+          "Produit recyclable ou recyclé",
+          "Produit dangereux",
+          "Produit non recyclable"
+        ],
+        "answer": "Produit recyclable ou recyclé"
+      },
+      {
+        "question": "Quel est le principal organisme français chargé du recyclage des emballages ménagers ?",
+        "options": [
+          "Eco-Emballages",
+          "Ademe",
+          "Citeo",
+          "Veolia"
+        ],
+        "answer": "Citeo"
+      },
+      {
+        "question": "Combien de temps faut-il pour qu’une bouteille en plastique se décompose dans la nature ?",
+        "options": [
+          "10 ans",
+          "100 à 1 000 ans",
+          "1 an",
+          "50 ans"
+        ],
+        "answer": "100 à 1 000 ans"
+      },
+      {
+        "question": "Quel est l’objectif principal de la loi AGEC ?",
+        "options": [
+          "Favoriser l’incinération des déchets",
+          "Réduire les déchets et encourager le recyclage",
+          "Interdire la poubelle jaune",
+          "Imposer des taxes sur le plastique"
+        ],
+        "answer": "Réduire les déchets et encourager le recyclage"
+      },
+      {
+        "question": "Quelle est la couleur de la poubelle pour les emballages recyclables ?",
+        "options": [
+          "Verte",
+          "Bleue",
+          "Jaune",
+          "Grise"
+        ],
+        "answer": "Jaune"
+      },
+      {
+        "question": "Dans quelle poubelle jeter un pot en verre de confiture ?",
+        "options": [
+          "Poubelle jaune",
+          "Poubelle verte",
+          "Poubelle grise",
+          "Poubelle bleue"
+        ],
+        "answer": "Poubelle verte"
+      },
+      {
+        "question": "Peut-on jeter un pot de yaourt dans la poubelle jaune ?",
+        "options": [
+          "Oui",
+          "Non",
+          "Seulement s'il est propre",
+          "Uniquement dans certaines villes"
+        ],
+        "answer": "Oui"
+      },
+      {
+        "question": "Où jeter une boîte de conserve ?",
+        "options": [
+          "Poubelle grise",
+          "Poubelle jaune",
+          "Poubelle bleue",
+          "Poubelle verte"
+        ],
+        "answer": "Poubelle jaune"
+      },
+      {
+        "question": "Où jeter les canettes en aluminium ?",
+        "options": [
+          "Poubelle jaune",
+          "Poubelle verte",
+          "Poubelle grise",
+          "Poubelle bleue"
+        ],
+        "answer": "Poubelle jaune"
+      },
+      {
+        "question": "Les bouteilles d’huile en plastique vont-elles dans la poubelle jaune ?",
+        "options": [
+          "Oui",
+          "Non",
+          "Seulement si elles sont vides",
+          "Seulement si elles sont en plastique PET"
+        ],
+        "answer": "Oui"
+      },
+      {
+        "question": "Les sacs plastiques peuvent-ils être jetés dans la poubelle jaune ?",
+        "options": [
+          "Oui, en petites quantités",
+          "Non, ils vont dans des points de collecte spécifiques",
+          "Oui, mais uniquement si ils sont propres",
+          "Oui, mais uniquement dans certains endroits"
+        ],
+        "answer": "Non, ils vont dans des points de collecte spécifiques"
+      },
+      {
+        "question": "Où jeter les médicaments périmés ?",
+        "options": [
+          "Poubelle jaune",
+          "Poubelle grise",
+          "En pharmacie",
+          "Déchèterie"
+        ],
+        "answer": "En pharmacie"
+      },
+      {
+        "question": "Que faire des piles usagées ?",
+        "options": [
+          "Poubelle jaune",
+          "Poubelle grise",
+          "Point de collecte spécifique",
+          "Les enterrer"
+        ],
+        "answer": "Point de collecte spécifique"
+      },
+      {
+        "question": "Que faire des vêtements abîmés ?",
+        "options": [
+          "Les jeter dans la poubelle grise",
+          "Les déposer dans une borne de collecte",
+          "Les brûler",
+          "Les enterrer"
+        ],
+        "answer": "Les déposer dans une borne de collecte"
+      },
+      {
+        "question": "Peut-on mettre du pain dans un compost ?",
+        "options": [
+          "Oui, mais en petite quantité",
+          "Non",
+          "Seulement s'il est dur",
+          "Uniquement si on le mélange à des fruits"
+        ],
+        "answer": "Oui, mais en petite quantité"
+      },
+      {
+        "question": "Quelle loi interdit les sacs plastiques à usage unique en France ?",
+        "options": [
+          "Loi AGEC",
+          "Loi de transition énergétique",
+          "Loi Grenelle",
+          "Loi bio-déchets"
+        ],
+        "answer": "Loi de transition énergétique"
+      },
+      {
+        "question": "Quelle est la matière la plus recyclée au monde ?",
+        "options": [
+          "Le plastique",
+          "L’acier",
+          "Le papier",
+          "Le verre"
+        ],
+        "answer": "L’acier"
+      },
+      {
+        "question": "Combien de bouteilles en plastique faut-il pour fabriquer un pull en polaire ?",
+        "options": [
+          "10",
+          "25",
+          "50",
+          "100"
+        ],
+        "answer": "25"
+      },
+      {
+        "question": "Peut-on recycler une brosse à dents ?",
+        "options": [
+          "Non",
+          "Oui, dans la poubelle jaune",
+          "Non, elle doit être jetée dans la poubelle grise",
+          "Oui, via un programme de recyclage spécifique"
+        ],
+        "answer": "Oui, via un programme de recyclage spécifique"
+      },
+      {
+        "question": "Quel est le principal avantage du recyclage des déchets électroniques ?",
+        "options": [
+          "Réduire l'encombrement des déchèteries",
+          "Extraire des matériaux précieux comme l’or et l’argent",
+          "Éviter l’exportation des déchets",
+          "Produire plus d’objets électroniques"
+        ],
+        "answer": "Extraire des matériaux précieux comme l’or et l’argent"
+      }
+    ]
+  }
+  
