@@ -1,3 +1,4 @@
+import requests
 from rest_framework import serializers
 from .models import User
 from rest_framework.response import Response
@@ -6,36 +7,86 @@ from rest_framework import status
 from rest_framework.views import APIView
 
 
-
 class SignUpSerializer(serializers.ModelSerializer):
+    department = serializers.CharField(write_only=True)
+    commune = serializers.CharField()
+    
     class Meta:
         model = User
-        fields = ['password', 'email', 'first_name', 'last_name', 'phone', 'commune']
+        fields = ['email', 'password', 'first_name', 'last_name', 
+                 'phone', 'department', 'commune']
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'email': {'required': True},
+            'first_name': {'required': True},
+            'last_name': {'required': True}
+        }
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError("Cet e-mail est déjà utilisé.")
+        return value
+
+    def validate_phone(self, value):
+        if value and User.objects.filter(phone=value).exists():
+            raise serializers.ValidationError("Ce numéro est déjà utilisé.")
+        return value
 
     def validate(self, data):
-        # 1) Check if an account with this email already exists:
-        email = data['email']
-        if User.objects.filter(email=email).exists():
-            raise serializers.ValidationError({"email": "Cet e-mail est déjà utilisé."})
+        department_code = data.get('department')
+        commune_name = data.get('commune')
+        
+        if not department_code:
+            raise serializers.ValidationError({"department": "Le département est requis."})
+            
+        # Validate department
+        dept_response = requests.get(f"https://geo.api.gouv.fr/departements/{department_code}")
+        if dept_response.status_code != 200:
+            raise serializers.ValidationError({"department": "Code de département invalide."})
 
-        # 2) If phone is provided, ensure it's unique
-        phone = data.get('phone', None)
-        if phone:
-            if User.objects.filter(phone=phone).exists():
-                raise serializers.ValidationError({"phone": "Ce numéro est déjà utilisé."})
+        # Validate commune exists in department
+        commune_response = requests.get(
+            f"https://geo.api.gouv.fr/departements/{department_code}/communes"
+        )
+        
+        if commune_response.status_code != 200:
+            raise serializers.ValidationError({"commune": "Impossible de vérifier la commune."})
+            
+        communes = commune_response.json()
+                
+        # Case-insensitive comparison
+        valid_commune = any(
+            c['nom'].lower().strip() == commune_name.lower().strip() 
+            for c in communes
+        )
+        
+        if not valid_commune:
+            raise serializers.ValidationError(
+                {"commune": "Cette commune n'existe pas dans ce département."}
+            )
+
+        # Store the exact name from the API
+        for c in communes:
+            if c['nom'].lower().strip() == commune_name.lower().strip():
+                data['commune'] = c['nom']  # Use the official name from API
+                break
 
         return data
 
+
+
     def create(self, validated_data):
-        # Create a user, using email as username
+        # Remove department as it's not a User model field
+        department = validated_data.pop('department')
+        # Create user
         user = User.objects.create_user(
-            username=validated_data['email'],   # for AbstractUser
+            username=validated_data['email'],
             email=validated_data['email'],
+            password=validated_data['password'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
-            password=validated_data['password'],
-            phone=validated_data.get('phone', None),
-            commune=validated_data.get('commune', None),
+            phone=validated_data.get('phone'),
+            commune=validated_data['commune']
         )
         return user
 
@@ -86,3 +137,16 @@ class ChangePasswordSerializer(serializers.Serializer):
         if not user.check_password(value):
             raise serializers.ValidationError("Le mot de passe actuel est incorrect.")
         return value
+    
+
+from .models import Department, Commune
+
+class DepartmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Department
+        fields = ['id', 'code', 'name']
+
+class CommuneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Commune
+        fields = ['id', 'name', 'code', 'zip_code']

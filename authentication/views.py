@@ -7,30 +7,69 @@ from .serializers import ChangePasswordSerializer, SignUpSerializer, SignInSeria
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated
 
-class SignUpAPIView(APIView):
-    def post(self, request):
-        serializer = SignUpSerializer(data=request.data)
-        if serializer.is_valid():
-            user = serializer.save()  # create user after validation
-            refresh = RefreshToken.for_user(user)
-            access_token = str(refresh.access_token)
-            refresh_token = str(refresh)
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+import requests
+from rest_framework.permissions import AllowAny
 
+class LocationViewSet(viewsets.ViewSet):
+    permission_classes = [AllowAny]
+    
+    def list_departments(self, request):
+        """Get all French departments"""
+        response = requests.get("https://geo.api.gouv.fr/departements")
+        if response.status_code == 200:
+            departments = response.json()
             return Response({
-                "message": "Utilisateur créé avec succès",
-                "access": access_token,
-                "refresh": refresh_token,
-                "user": {
-                    "email": user.email,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "phone": user.phone,
-                    "commune": user.commune
-                }
-            }, status=status.HTTP_201_CREATED)
+                "status": "success",
+                "data": departments
+            })
+        return Response({
+            "status": "error",
+            "message": "Impossible de récupérer les départements"
+        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-        # If invalid, return errors
+    def list_communes(self, request, department_code):
+        """Get communes for a specific department"""
+        response = requests.get(
+            f"https://geo.api.gouv.fr/departements/{department_code}/communes"
+        )
+        if response.status_code == 200:
+            communes = response.json()
+            return Response({
+                "status": "success",
+                "data": communes
+            })
+        return Response({
+            "status": "error",
+            "message": "Impossible de récupérer les communes"
+        }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+class SignUpAPIView(APIView):
+ def post(self, request):
+    serializer = SignUpSerializer(data=request.data)
+    if not serializer.is_valid():
+        print("Validation errors:", serializer.errors)  # Print validation errors
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if serializer.is_valid():
+        user = serializer.save() # create user after validation
+        refresh = RefreshToken.for_user(user)
+        access_token = str(refresh.access_token)
+        refresh_token = str(refresh)
+        return Response({
+            "message": "Utilisateur créé avec succès",
+            "access": access_token,
+            "refresh": refresh_token,
+            "user": {
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "phone": user.phone,
+            "commune": user.commune
+            }
+        }, status=status.HTTP_201_CREATED)
+    # If invalid, return errors
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 User = get_user_model()
 
 class SignInAPIView(APIView):
@@ -116,3 +155,30 @@ class ChangePasswordView(APIView):
                 "access": str(refresh.access_token),
             })
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_commune_top_users(request):
+    user_commune = request.user.commune
+    
+    if not user_commune:
+        return Response({
+            "error": "Vous devez être associé à une commune"
+        }, status=400)
+        
+    top_users = User.objects.filter(
+        commune=user_commune
+    ).order_by('-total_points')[:5]
+    
+    return Response({
+        "commune": user_commune,
+        "top_users": [
+            {
+                "avatar_name": user.avatar_name,
+                "total_points": user.total_points,
+                "rank": index + 1
+            }
+            for index, user in enumerate(top_users)
+        ]
+    })

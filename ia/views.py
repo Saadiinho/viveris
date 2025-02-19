@@ -38,13 +38,12 @@ class WasteClassificationView(APIView):
             )
 
         # Get confidence threshold from request or use default
-        confidence_threshold = float(request.data.get('confidence_threshold', 1.5))
+        confidence_threshold = float(request.data.get('confidence_threshold',4 ))
 
         # Make prediction
         result = waste_classifier.predict_image(image_file, confidence_threshold)
-
         # If prediction was successful, save to database
-        if result['success']:
+        if result['success'] :
             classification = WasteClassification.objects.create(
                 image=image_file,
                 predicted_class=result['predicted_class'],
