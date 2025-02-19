@@ -3,7 +3,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import ChangePasswordSerializer, SignUpSerializer, SignInSerializer, UpdateUserSerializer, UserSerializer
+
+from .models import PasswordResetCode
+from .serializers import ChangePasswordSerializer, ForgotPasswordSerializer, SignUpSerializer, SignInSerializer, UpdateUserSerializer, UserSerializer, VerifyCodeSerializer
 from django.contrib.auth import get_user_model
 from rest_framework.permissions import IsAuthenticated
 
@@ -182,3 +184,93 @@ def get_commune_top_users(request):
             for index, user in enumerate(top_users)
         ]
     })
+
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.core.mail import send_mail
+from django.conf import settings
+import logging
+
+logger = logging.getLogger(__name__)
+
+class ForgotPasswordView(APIView):
+    def post(self, request):
+        try:
+            serializer = ForgotPasswordSerializer(data=request.data)
+            if serializer.is_valid():
+                email = serializer.validated_data['email']
+                try:
+                    user = User.objects.get(email=email)
+                except User.DoesNotExist:
+                    return Response({
+                        "error": "Cet email n'existe pas dans notre base de données"
+                    }, status=status.HTTP_404_NOT_FOUND)
+
+                # Generate and save reset code
+                code = PasswordResetCode.generate_code()
+                PasswordResetCode.objects.create(
+                    user=user,
+                    code=code
+                )
+
+                try:
+                    send_mail(
+                        subject='Réinitialisation de mot de passe',
+                        message=f'Votre code de vérification est : {code}\nCe code expirera dans 15 minutes.',
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[email],
+                        fail_silently=False,
+                    )
+                    return Response({
+                        "message": "Un code de vérification a été envoyé à votre adresse email."
+                    })
+                except Exception as e:
+                    print(f"Email error details: {str(e)}")  # Afficher l'erreur détaillée
+                    return Response({
+                        "error": f"Erreur d'envoi d'email: {str(e)}"
+                    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        except Exception as e:
+            print(f"Unexpected error: {str(e)}")  # Log l'erreur générale
+            return Response({
+                "error": f"Erreur inattendue: {str(e)}"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class VerifyResetCodeView(APIView):
+    def post(self, request):
+        serializer = VerifyCodeSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data['email']
+            new_password = serializer.validated_data['new_password']
+            user = User.objects.get(email=email)
+            
+            # Get the reset code
+            reset_code = PasswordResetCode.objects.filter(
+                user=user,
+                code=serializer.validated_data['code'],
+                is_used=False
+            ).order_by('-created_at').first()
+            
+            # Mark code as used
+            reset_code.is_used = True
+            reset_code.save()
+            
+            # Update password
+            user.set_password(new_password)
+            user.save()
+            
+            # Generate new tokens
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                "message": "Mot de passe changé avec succès",
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+            })
+            
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

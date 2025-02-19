@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ChangePasswordView, SignUpAPIView, SignInAPIView, UpdateUserProfileView, UserDetailView,get_user_points ,LocationViewSet , get_commune_top_users
+from .views import ChangePasswordView, ForgotPasswordView, SignUpAPIView, SignInAPIView, UpdateUserProfileView, UserDetailView, VerifyResetCodeView,get_user_points ,LocationViewSet , get_commune_top_users
 
 
 
@@ -20,4 +20,6 @@ urlpatterns = [
     # New URLs for updating profile and password
     path('users/profile/update/', UpdateUserProfileView.as_view(), name='update_profile'),
     path('users/profile/change-password/', ChangePasswordView.as_view(), name='change_password'),
+    path('users/forgot-password/', ForgotPasswordView.as_view(), name='forgot_password'),
+    path('users/verify-reset-code/', VerifyResetCodeView.as_view(), name='verify_reset_code'),
 ]

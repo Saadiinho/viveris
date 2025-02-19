@@ -149,3 +149,13 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Durée de vie de 7 jours pour le refresh token
     'ROTATE_REFRESH_TOKENS': False,  
 }
+
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'smarttri.assistance@gmail.com'  # Mettez votre email ici
+EMAIL_HOST_PASSWORD = 'yzoc tgkg xktf vksr'  # Mot de passe d'application Google
+DEFAULT_FROM_EMAIL = 'smarttri.assistance@gmail.com'  # Même email que EMAIL_HOST_USER
+

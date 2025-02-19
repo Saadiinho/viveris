@@ -1,6 +1,6 @@
 import requests
 from rest_framework import serializers
-from .models import User
+from .models import PasswordResetCode, User
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework import status
@@ -113,7 +113,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         # Include total_points if you want to show it in user detail
-        fields = ['email', 'first_name', 'last_name', 'phone', 'commune', 'total_points']
+        fields = ['email', 'first_name', 'last_name', 'phone', 'commune', 'total_points','avatar_name']
 
 class UpdateUserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -150,3 +150,46 @@ class CommuneSerializer(serializers.ModelSerializer):
     class Meta:
         model = Commune
         fields = ['id', 'name', 'code', 'zip_code']
+
+
+
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate_email(self, value):
+        user = User.objects.filter(email=value).first()
+        if not user:
+            raise serializers.ValidationError("Aucun compte n'est associé à cet email.")
+        return value
+
+class VerifyCodeSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    code = serializers.CharField(min_length=6, max_length=6)
+    new_password = serializers.CharField(min_length=8)
+
+    def validate(self, data):
+        user = User.objects.filter(email=data['email']).first()
+        if not user:
+            raise serializers.ValidationError({
+                "email": "Aucun compte n'est associé à cet email."
+            })
+
+        # Get the latest unused code for this user
+        reset_code = PasswordResetCode.objects.filter(
+            user=user,
+            code=data['code'],
+            is_used=False
+        ).order_by('-created_at').first()
+
+        if not reset_code:
+            raise serializers.ValidationError({
+                "code": "Code invalide."
+            })
+
+        if not reset_code.is_valid():
+            raise serializers.ValidationError({
+                "code": "Code expiré. Veuillez demander un nouveau code."
+            })
+
+        return data
