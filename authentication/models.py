@@ -2,14 +2,31 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 import random, string
 from django.utils import timezone
+from django.db import models
+from django.contrib.auth.models import AbstractUser
+import random, string
+from django.utils import timezone
+
+# Define a list of avatar image paths (adjust paths as needed)
+AVATAR_CHOICES = [
+    'assets/avatars/recycle1.png',
+    'assets/avatars/recycle2.png',
+    'assets/avatars/recycle3.png',
+    'assets/avatars/recycle4.png',
+    'assets/avatars/recycle5.png',
+    'assets/avatars/recycle6.png',
+    'assets/avatars/recycle7.png',
+]
 
 class User(AbstractUser):
     phone = models.BigIntegerField(null=True, blank=True)
     commune = models.CharField(max_length=100, null=True, blank=True)
     total_points = models.IntegerField(default=0)
     
-    # Avatar logic
+    # Avatar logic: We already generate a random avatar name; now add an avatar picture.
     avatar_name = models.CharField(max_length=50, unique=True, blank=True, null=True)
+    avatar = models.CharField(max_length=255, blank=True, null=True)  # New field for the avatar picture URL/path
+
     ADJECTIVES = [
         "Rapide", "Agile", "Sage", "Malin", "Brave", "Rusé", "Habile",
         "Vigilant", "Vif", "Expert", "Maître", "Héros", "Champion",
@@ -22,7 +39,7 @@ class User(AbstractUser):
         "Aigle"
     ]
 
-    # 1) Add a referral_code
+    # Referral code field
     referral_code = models.CharField(
         max_length=10, 
         unique=True, 
@@ -31,13 +48,17 @@ class User(AbstractUser):
     )
 
     def save(self, *args, **kwargs):
-        # Generate avatar if needed
+        # Generate avatar name if not set
         if not self.avatar_name:
             self.avatar_name = self.generate_avatar_name()
         
-        # 2) Generate referral code if empty
+        # Generate referral code if empty
         if not self.referral_code:
             self.referral_code = self.generate_referral_code()
+
+        # Randomly assign an avatar picture if none is provided
+        if not self.avatar:
+            self.avatar = random.choice(AVATAR_CHOICES)
 
         super().save(*args, **kwargs)
 
@@ -49,31 +70,27 @@ class User(AbstractUser):
             avatar_name = f"{adj}{noun}{number}"
             if not User.objects.filter(avatar_name=avatar_name).exists():
                 return avatar_name
-
-        # Fallback
         timestamp = int(timezone.now().timestamp())
         return f"{random.choice(self.ADJECTIVES)}{random.choice(self.NOUNS)}{timestamp}"
 
-    # 3) Code to generate a unique referral code
     def generate_referral_code(self, length=8):
-        """Generate a random alphanumeric code and ensure uniqueness."""
         for _ in range(10):
             code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
             if not User.objects.filter(referral_code=code).exists():
                 return code
-
-        # Fallback if we can't find a unique code after 10 tries
         return f"{int(timezone.now().timestamp())}"
 
     def get_public_profile(self):
         return {
             'avatar_name': self.avatar_name,
+            'avatar': self.avatar,
             'total_points': self.total_points,
             'commune': self.commune
         }
 
     def __str__(self):
         return self.username or self.email
+
 
 
 class Department(models.Model):

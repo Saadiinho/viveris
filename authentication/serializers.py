@@ -1,20 +1,26 @@
+# serializers.py
 import requests
 from rest_framework import serializers
-from .models import PasswordResetCode, User
-from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework import status
-from rest_framework.views import APIView
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 
 class SignUpSerializer(serializers.ModelSerializer):
     department = serializers.CharField(write_only=True)
     commune = serializers.CharField()
+    referral_code = serializers.CharField(
+        write_only=True, 
+        required=False,  # optional
+        allow_blank=True
+    )
     
     class Meta:
         model = User
-        fields = ['email', 'password', 'first_name', 'last_name', 
-                 'phone', 'department', 'commune']
+        fields = [
+            'email', 'password', 'first_name', 'last_name', 
+            'phone', 'department', 'commune',
+            'referral_code'
+        ]
         extra_kwargs = {
             'password': {'write_only': True},
             'email': {'required': True},
@@ -68,16 +74,29 @@ class SignUpSerializer(serializers.ModelSerializer):
         # Store the exact name from the API
         for c in communes:
             if c['nom'].lower().strip() == commune_name.lower().strip():
-                data['commune'] = c['nom']  # Use the official name from API
+                data['commune'] = c['nom']  # Use official name from API
                 break
+            
+        # Optional: Validate referral_code if provided
+        referral_code = data.get('referral_code', None)
+        if referral_code:
+            referral_code = referral_code.strip()
+            if referral_code:
+                # Check if the code is valid
+                try:
+                    referrer = User.objects.get(referral_code=referral_code)
+                except User.DoesNotExist:
+                    raise serializers.ValidationError({"referral_code": "Code parrain inexistant."})
+                # Optionally store the referrer object in the serializer context
+                self.context['referrer'] = referrer
 
         return data
 
-
-
     def create(self, validated_data):
-        # Remove department as it's not a User model field
+        # Remove department as it's not a User field
         department = validated_data.pop('department')
+        referral_code = validated_data.pop('referral_code', None)
+
         # Create user
         user = User.objects.create_user(
             username=validated_data['email'],
@@ -88,6 +107,16 @@ class SignUpSerializer(serializers.ModelSerializer):
             phone=validated_data.get('phone'),
             commune=validated_data['commune']
         )
+
+        # If referral_code was provided and validated, award bonus
+        if referral_code and 'referrer' in self.context:
+            referrer = self.context['referrer']
+            # Award points
+            referrer.total_points += 100
+            referrer.save()
+            user.total_points += 100
+            user.save()
+
         return user
 
 from rest_framework import serializers
@@ -99,21 +128,36 @@ class SignInSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
 
-    def validate_email(self, value):
-        user = User.objects.filter(email=value).first()
+    def validate(self, data):
+        # Extract submitted email & password
+        email = data.get("email")
+        password = data.get("password")
+
+        # 1) Check if a user with this email exists
+        user = User.objects.filter(email=email).first()
         if not user:
-            raise serializers.ValidationError("Cet email n'est pas enregistré.")
-        return value
+            raise serializers.ValidationError({"email": ["Cet email n'est pas enregistré."]})
+
+        # 2) Check if the password is correct
+        if not user.check_password(password):
+            raise serializers.ValidationError({"password": ["Mot de passe incorrect."]})
+
+        # 3) Optionally check if user is active / not blocked
+        if not user.is_active:
+            raise serializers.ValidationError({"email": ["Ce compte est désactivé."]})
+
+        # If all checks pass, return the data unmodified
+        return data
 
 # auth/serializers.py
 from rest_framework import serializers
-from .models import User
+from .models import PasswordResetCode, User
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         # Include total_points if you want to show it in user detail
-        fields = ['email', 'first_name', 'last_name', 'phone', 'commune', 'total_points','avatar_name']
+        fields = ['email', 'first_name', 'last_name', 'phone', 'commune', 'total_points','avatar_name','avatar']
 
 class UpdateUserSerializer(serializers.ModelSerializer):
     class Meta:

@@ -261,6 +261,7 @@ def user_recycling_activity(request):
         try:
             body = json.loads(request.body)
             product_name = body.get("product_name", "")
+            print(product_name)
             product_type = body.get("product_type", "")
             quantity = int(body.get("quantity", 1))
             points_earned= int(body.get("points_earned",1))
@@ -274,7 +275,7 @@ def user_recycling_activity(request):
 
             request.user.total_points += points_earned
             request.user.save()
-
+            
             return JsonResponse({
                 "message": "Activity created successfully",
                 "product_name":product_name,

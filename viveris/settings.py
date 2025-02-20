@@ -32,7 +32,7 @@ SECRET_KEY = 'django-insecure-+ytt9a30l#at@%!vtltqcg4l&a6suk=_&sg*&t=mlcztsb6az)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.1.167','127.0.0.1','172.18.112.153','localhost','192.168.1.167']
+ALLOWED_HOSTS = ['few-boats-grab.loca.lt','127.0.0.1','169.254.11.138','localhost','192.168.1.167','icy-chefs-attend.loca.lt']
 
 
 # Application definition
@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
     'ia',
-    'quiz'
+    'quiz',
+    'invites'
 ]
 
 MIDDLEWARE = [

@@ -23,5 +23,6 @@ urlpatterns = [
     path('api/auth/', include('authentication.urls')),
     path('api/scanner/', include('scanner.urls')),
     path('api/ia/',include('ia.urls')),
-    path('api/quiz/',include('quiz.urls'))
+    path('api/quiz/',include('quiz.urls')),
+    path('api/invites/',include('invites.urls'))
 ]

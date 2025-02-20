@@ -48,13 +48,15 @@ class LocationViewSet(viewsets.ViewSet):
         }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 class SignUpAPIView(APIView):
- def post(self, request):
-    serializer = SignUpSerializer(data=request.data)
-    if not serializer.is_valid():
-        print("Validation errors:", serializer.errors)  # Print validation errors
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    if serializer.is_valid():
-        user = serializer.save() # create user after validation
+
+    def post(self, request):
+        serializer = SignUpSerializer(data=request.data, context={"request": request})
+        if not serializer.is_valid():
+            print("Validation errors:", serializer.errors)  
+            print(serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        user = serializer.save()  # create user after validation
         refresh = RefreshToken.for_user(user)
         access_token = str(refresh.access_token)
         refresh_token = str(refresh)
@@ -63,15 +65,17 @@ class SignUpAPIView(APIView):
             "access": access_token,
             "refresh": refresh_token,
             "user": {
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "phone": user.phone,
-            "commune": user.commune
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "phone": user.phone,
+                "commune": user.commune,
+                "total_points": user.total_points,
+                "referral_code": user.referral_code
             }
         }, status=status.HTTP_201_CREATED)
-    # If invalid, return errors
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
 User = get_user_model()
 
 class SignInAPIView(APIView):
