@@ -26,13 +26,3 @@ Smarttri est une application mobile innovante conçue pour faciliter le tri des 
 
 5. Lancer Postman pour tester les différents requêtes de cette API 
 
-## Les différents endpoints
-
-Pour l'instant, seul deux endpoints sont disponibles : 
-1. L'inscription :
-   ```bash
-   POST https://localhost:8000/api/users/sign-up/
-
-2. La connexion :
-   ```bash
-   POST https://localhost:8000/api/users/sign-in/
